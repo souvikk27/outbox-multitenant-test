@@ -10,41 +10,46 @@ using OutboxTestInmemory.Sample.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
-        "Postgres connection string missing. Set ConnectionStrings__DefaultConnection.");
+        "Postgres connection string missing. Set ConnectionStrings__DefaultConnection."
+    );
 
 // Application's own DbContext — also hosts the outbox table (transactional enqueue).
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options
         .UseNpgsql(connectionString, npg => npg.EnableRetryOnFailure(maxRetryCount: 3))
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+);
 
 // Outbox library — single fluent registration.
-builder.Services
-    .AddOutbox<AppDbContext>(o => builder.Configuration.GetSection("Outbox").Bind(o))
+builder
+    .Services.AddOutbox<AppDbContext>(o => builder.Configuration.GetSection("Outbox").Bind(o))
     .AddProcessing()
     .AddHandler<EmailPayload, EmailHandler>("email");
 
 // Health
-builder.Services
-    .AddHealthChecks()
+builder
+    .Services.AddHealthChecks()
     .AddNpgSql(connectionString, name: "postgres", tags: ["ready"])
     .AddOutboxBacklogHealthCheck(tags: "ready");
 
 // Telemetry
-builder.Services
-    .AddOpenTelemetry()
+builder
+    .Services.AddOpenTelemetry()
     .ConfigureResource(r => r.AddService("OutboxTestInmemory"))
-    .WithMetrics(m => m
-        .AddMeter(OutboxDiagnostics.MeterName)
-        .AddAspNetCoreInstrumentation()
-        .AddRuntimeInstrumentation()
-        .AddOtlpExporter())
-    .WithTracing(t => t
-        .AddSource(OutboxDiagnostics.ActivitySourceName)
-        .AddAspNetCoreInstrumentation()
-        .AddOtlpExporter());
+    .WithMetrics(m =>
+        m.AddMeter(OutboxDiagnostics.MeterName)
+            .AddAspNetCoreInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddOtlpExporter()
+    )
+    .WithTracing(t =>
+        t.AddSource(OutboxDiagnostics.ActivitySourceName)
+            .AddAspNetCoreInstrumentation()
+            .AddOtlpExporter()
+    );
 
 builder.Services.AddOpenApi();
 

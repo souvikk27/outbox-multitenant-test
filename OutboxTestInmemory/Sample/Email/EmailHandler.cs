@@ -18,7 +18,12 @@ public sealed class EmailHandler : IOutboxHandler<EmailPayload>
 
         _logger.LogInformation(
             "Sending email #{Index} to {To} for tenant {TenantId} (latency {DelayMs}ms, attempt {Attempt})",
-            ctx.Payload.Index, ctx.Payload.To, ctx.TenantId, delay, ctx.RetryCount + 1);
+            ctx.Payload.Index,
+            ctx.Payload.To,
+            ctx.TenantId,
+            delay,
+            ctx.RetryCount + 1
+        );
 
         await Task.Delay(delay, ct);
 
@@ -26,7 +31,9 @@ public sealed class EmailHandler : IOutboxHandler<EmailPayload>
         if (roll < 0.05)
         {
             // Permanent: malformed address, etc. Default classifier treats InvalidOperation as permanent.
-            throw new InvalidOperationException("Simulated permanent failure (e.g. invalid address)");
+            throw new InvalidOperationException(
+                "Simulated permanent failure (e.g. invalid address)"
+            );
         }
         if (roll < 0.30)
         {

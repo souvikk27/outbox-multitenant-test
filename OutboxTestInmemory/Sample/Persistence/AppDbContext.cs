@@ -11,7 +11,8 @@ namespace OutboxTestInmemory.Sample.Persistence;
 /// </summary>
 public class AppDbContext : DbContext, IOutboxDbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options) { }
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 

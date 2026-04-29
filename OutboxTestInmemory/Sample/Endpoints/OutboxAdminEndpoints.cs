@@ -43,7 +43,8 @@ public static class OutboxAdminEndpoints
                     To: $"user{i}@example.com",
                     Subject: "Hello",
                     Body: "This is a test",
-                    Index: i),
+                    Index: i
+                ),
                 new OutboxPublishOptions { TenantId = tenant }
             );
         }
@@ -58,7 +59,11 @@ public static class OutboxAdminEndpoints
         return Results.Ok(backlog);
     }
 
-    private static async Task<IResult> RequeueAsync(Guid id, IOutboxStore store, CancellationToken ct)
+    private static async Task<IResult> RequeueAsync(
+        Guid id,
+        IOutboxStore store,
+        CancellationToken ct
+    )
     {
         var n = await store.RequeueAsync(id, ct);
         return n == 0
